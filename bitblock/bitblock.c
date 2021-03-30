@@ -38,6 +38,16 @@ int save_blk(const char *__restrict__ __filename, BLOCK *blk) {
     } else return 0;
 }
 
+int read_blk(const char *__restrict__ __filename, BLOCK *blk) {
+    FILE *fp = NULL;
+    fp = fopen(__filename, "rb");
+    if(fp) {
+        fread(blk, sizeof(BLOCK), 1, fp);
+        fclose(fp);
+        return 1;
+    } else return 0;
+}
+
 #ifdef SELF_TEST_BITBLK
 #define printhash(x) for(int i = 0; i < 256/8; i++) printf("%0x", x[i])
 BLOCK blk;
@@ -51,10 +61,15 @@ int main() {
     uint8_t count = 0;
     printf("How many bytes do you want to be 0: ");
     scanf("%hhu", &count);
-    printf("When n1 is %lu, hash is ", scan_n1(&blk, count));
+    printf("When n1 is %llu, hash is ", scan_n1(&blk, count));
     //sha256(&blk, sizeof(blk), digest);
     printhash(digest);
     putchar('\n');
     if(save_blk("blk0", &blk)) puts("Save block success.");
+    if(read_blk("blk0", &blk)) puts("Read block success.");
+    sha256(&blk,  sizeof(BLOCK), digest);
+    printf("Hash from saved blk: ");
+    printhash(digest);
+    putchar('\n');
 }
 #endif
