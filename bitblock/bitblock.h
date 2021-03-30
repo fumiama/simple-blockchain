@@ -5,7 +5,7 @@ struct BLOCK {
     uint64_t n1;
     uint64_t n2;
     uint8_t data[1024-80];      //任意数据
-};//Totol size 1k
+};//Total size 1k
 typedef struct BLOCK BLOCK;
 uint8_t digest[256/8];
 
