@@ -1,0 +1,3 @@
+[submodule "SHA256"]
+	path = SHA256
+	url = https://github.com/ilvn/SHA256.git
