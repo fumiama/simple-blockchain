@@ -6,4 +6,4 @@ struct CHAININF {
 };
 typedef struct CHAININF CHAININF;
 
-int make_new_chain(char *folder, uint8_t* log_addr, const uint8_t *p_privateKey, uint32_t blk_in_one)
+int make_new_chain(char *folder, uint8_t* log_addr, const uint8_t *p_privateKey, uint32_t blk_in_one);

@@ -12,7 +12,7 @@ void gen_data_hash(BLOCK *blk, const uint8_t *p_privateKey) {
     memcpy(blk->dataecc, eccsignature, ECC_BYTES*2);
 }
 
-uint8_t zerobyteof(uint8_t *hash) {
+uint8_t zerobyteof(uint8_t *hash) {     //hash前多少字节为0
     uint8_t i;
     for(i = 0; i < 32; i++) if(hash[i]) break;
     return i;
@@ -41,27 +41,23 @@ uint64_t scan_n2(BLOCK *blk, uint8_t zerobyte_cnt) {
 int save_blk(const char *__restrict__ __filename, BLOCK *blk) {
     FILE *fp = NULL;
     fp = fopen(__filename, "wb");
-    if(fp) {
-        fwrite(blk, BLKSZ, 1, fp);
-        fclose(fp);
-        return 1;
+    if(fp && fwrite(blk, BLKSZ, 1, fp) > 0) {
+        return !fclose(fp);
     } else return 0;
 }
 
 int read_blk(const char *__restrict__ __filename, BLOCK *blk) {
     FILE *fp = NULL;
     fp = fopen(__filename, "rb");
-    if(fp) {
-        fread(blk, BLKSZ, 1, fp);
-        fclose(fp);
-        return 1;
+    if(fp && fread(blk, BLKSZ, 1, fp) > 0) {
+        return !fclose(fp);
     } else return 0;
 }
 
 #ifdef SELF_TEST_BITBLK
-#define printhash(x, bit) for(int i = 0; i < bit/8; i++) printf("%0x", x[i])
+#define printhash(x, bit) for(int i = 0; i < bit/8; i++) printf("%02x", x[i])
 BLOCK blk;
-char priv_key_all_zero[ECC_BYTES];
+uint8_t priv_key_all_zero[ECC_BYTES];
 int main() {
     blk.front_blk[0] = 1;
     printf("Size of a blk: %tu\n", BLKSZ);
