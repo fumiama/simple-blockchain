@@ -114,7 +114,7 @@ int main() {
         printhash(priv_key, ECC_BYTES);
         putchar('\n');
         make_new_chain("block", pub_key, priv_key, 8);
-        BLOCK* blk = wrap_block(0, 1, pub_key, bitpool, priv_key, "init", 5);
+        BLOCK* blk = wrap_block(0, 12, pub_key, bitpool, priv_key, "init", 5);
         append_chain("block", blk);
         free(blk);
     }
@@ -124,7 +124,7 @@ int main() {
         BLOCK* prev = read_blk_in_chain("block", i - 1);
         if(prev) {
             sha256(prev, BLKSZ, bitpool);
-            BLOCK* blk = wrap_block(0, 1, pub_key, bitpool, priv_key, data, 1);
+            BLOCK* blk = wrap_block(0, 12, pub_key, bitpool, priv_key, data, 1);
             append_chain("block", blk);
             free(blk);
             free(prev);
