@@ -15,7 +15,7 @@ static void gen_data_hash(BLOCK *blk, const uint8_t *p_privateKey) {
     free(eccsignature);
 }
 
-static uint16_t zerobitsof(uint8_t *hash) {     //hash前多少字节为0
+static uint16_t zerobitsof(uint8_t *hash) {     //hash前多少比特为0
     uint16_t i;
     for(i = 0; i < 32; i++) if(hash[i]) break;
     uint8_t x = 8;
