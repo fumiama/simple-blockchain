@@ -3,7 +3,7 @@
 struct BLOCK {
     uint64_t version;
     uint8_t prev_hash[256/8];   //前一个区块的hash
-    uint8_t log_addr[256/8];    //记录者地址
+    uint8_t log_addr[256/8+1];    //记录者地址
     uint64_t n1;
     uint64_t n2;
     uint8_t dataecc[512/8];     //数据hash的签名

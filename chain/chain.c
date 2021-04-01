@@ -25,7 +25,7 @@ static FILE* open_info(const char *folder, const char* type) {
     return fpinf;
 }
 
-int make_new_chain(const char *folder, const uint8_t* log_addr, const uint8_t *p_privateKey, uint32_t blk_in_one) {
+int make_new_chain(const char *folder, const uint8_t *p_privateKey, uint32_t blk_in_one) {
     CHAININF* cinf = malloc(sizeof(CHAININF));
     int flag = 0;
     if(!access(folder, 0)) {
@@ -113,7 +113,7 @@ int main() {
         printf("Generated priv key: ");
         printhash(priv_key, ECC_BYTES);
         putchar('\n');
-        make_new_chain("block", pub_key, priv_key, 8);
+        make_new_chain("block", priv_key, 8);
         BLOCK* blk = wrap_block(0, 12, pub_key, bitpool, priv_key, "init", 5);
         append_chain("block", blk);
         free(blk);
