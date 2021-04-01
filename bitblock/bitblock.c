@@ -4,7 +4,7 @@
 #include "../SHA256/mark2/sha256.h"
 #include "../ecc/ecc.h"
 
-uint8_t eccsignature[ECC_BYTES*2];
+static uint8_t eccsignature[ECC_BYTES*2];
 
 void gen_data_hash(BLOCK *blk, const uint8_t *p_privateKey) {
     sha256(blk->data, DATSZ, digest);
@@ -56,8 +56,8 @@ int read_blk(const char *__restrict__ __filename, BLOCK *blk) {
 
 #ifdef SELF_TEST_BITBLK
 #define printhash(x, bit) for(int i = 0; i < bit/8; i++) printf("%02x", x[i])
-BLOCK blk;
-uint8_t priv_key_all_zero[ECC_BYTES];
+static BLOCK blk;
+static uint8_t priv_key_all_zero[ECC_BYTES];
 int main() {
     blk.front_blk[0] = 1;
     printf("Size of a blk: %tu\n", BLKSZ);
