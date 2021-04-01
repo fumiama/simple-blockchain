@@ -98,13 +98,23 @@ BLOCK* read_blk_in_chain(const char *folder, uint32_t index) {
     return blk;
 }
 
-
+#ifdef SELF_TEST_CHAIN
+#define printhash(x, bytes) for(int i = 0; i < (bytes); i++) printf("%02x", (x)[i])
 uint8_t bitpool[ECC_BYTES];
+uint8_t priv_key[ECC_BYTES];
+uint8_t pub_key[ECC_BYTES+1];
 int main() {
     if(access("block", 0)) {
         mkdir("block", 0755);
-        make_new_chain("block", bitpool, bitpool, 8);
-        BLOCK* blk = wrap_block(0, 1, bitpool, bitpool, bitpool, "init", 5);
+        ecc_make_key(pub_key, priv_key);
+        printf("Generated pub key: ");
+        printhash(pub_key, ECC_BYTES+1);
+        putchar('\n');
+        printf("Generated priv key: ");
+        printhash(priv_key, ECC_BYTES);
+        putchar('\n');
+        make_new_chain("block", pub_key, priv_key, 8);
+        BLOCK* blk = wrap_block(0, 1, pub_key, bitpool, priv_key, "init", 5);
         append_chain("block", blk);
         free(blk);
     }
@@ -114,7 +124,7 @@ int main() {
         BLOCK* prev = read_blk_in_chain("block", i - 1);
         if(prev) {
             sha256(prev, BLKSZ, bitpool);
-            BLOCK* blk = wrap_block(0, 1, bitpool, bitpool, bitpool, data, 1);
+            BLOCK* blk = wrap_block(0, 1, pub_key, bitpool, priv_key, data, 1);
             append_chain("block", blk);
             free(blk);
             free(prev);
@@ -122,3 +132,4 @@ int main() {
     }
     free(data);
 }
+#endif

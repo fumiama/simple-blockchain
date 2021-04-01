@@ -54,7 +54,7 @@ BLOCK* wrap_block(const uint64_t version, const uint8_t zerobyte_cnt, const uint
     memcpy(blk->data, data, data_len);
     gen_data_hash(blk, p_privateKey);
     blk->version = version;
-    memcpy(blk->log_addr, log_addr, 256/8);
+    memcpy(blk->log_addr, log_addr, 256/8+1);
     memcpy(blk->prev_hash, prev_hash, 256/8);
     scan_nounce(blk, zerobyte_cnt);
     return blk;
@@ -83,34 +83,35 @@ static int read_blk(const char *__restrict__ __filename, BLOCK *blk) {
 }
 
 #define printhash(x, bit) for(int i = 0; i < bit/8; i++) printf("%02x", x[i])
-static BLOCK blk;
-static uint8_t priv_key_all_zero[ECC_BYTES];
+static BLOCK* blk;
+static uint8_t priv_key_all_zero[ECC_BYTES+1];
 int main() {
-    printf("Size of a blk: %tu\n", BLKSZ);
-    sha256(&blk, BLKSZ, digest);
+    blk = malloc(BLKSZ);
+    printf("Size of a blk: %u\n", BLKSZ);
+    sha256(blk, BLKSZ, digest);
     printf("Init hash: ");
     printhash(digest,256);
     putchar('\n');
     uint8_t count = 0;
     printf("How many bytes do you want to be 0: ");
     scanf("%hhu", &count);
-    gen_data_hash(&blk, priv_key_all_zero);
-    scan_nounce(&blk, count);
-    printf("When n1 is %llu, n2 is %llu, hash is ", blk.n1, blk.n2);
-    sha256(&blk, BLKSZ, digest);
+    gen_data_hash(blk, priv_key_all_zero);
+    scan_nounce(blk, count);
+    printf("When n1 is %llu, n2 is %llu, hash is ", blk->n1, blk->n2);
+    sha256(blk, BLKSZ, digest);
     printhash(digest,256);
     putchar('\n');
     printf("Data ecc: ");
-    printhash(blk.dataecc,512);
+    printhash(blk->dataecc,512);
     putchar('\n');
-    if(save_blk("blk0", &blk)) puts("Save block success.");
-    if(read_blk("blk0", &blk)) puts("Read block success.");
-    sha256(&blk,  BLKSZ, digest);
+    if(save_blk("blk0", blk)) puts("Save block success.");
+    if(read_blk("blk0", blk)) puts("Read block success.");
+    sha256(blk, BLKSZ, digest);
     printf("Hash from saved blk: ");
     printhash(digest,256);
     putchar('\n');
     printf("Data ecc: ");
-    printhash(blk.dataecc,512);
+    printhash(blk->dataecc,512);
     putchar('\n');
 }
 #endif
