@@ -7,12 +7,9 @@
 
 static void gen_data_hash(BLOCK *blk, const uint8_t *p_privateKey) {
     uint8_t *digest = malloc(256/8);
-    uint8_t *eccsignature = malloc(ECC_BYTES*2);
     sha256(blk->data, DATSZ, digest);
-    ecdsa_sign(p_privateKey, digest, eccsignature);
-    memcpy(blk->dataecc, eccsignature, ECC_BYTES*2);
+    ecdsa_sign(p_privateKey, digest, blk->dataecc);
     free(digest);
-    free(eccsignature);
 }
 
 static uint16_t zerobitsof(uint8_t *hash) {     //hash前多少比特为0
