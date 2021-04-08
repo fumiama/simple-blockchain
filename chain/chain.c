@@ -42,7 +42,7 @@ int make_new_chain(const char *folder, const uint8_t *p_privateKey, uint32_t blk
     return flag;
 }
 
-#define set_blk_dir(folder, name) sprintf(dir_buf, "%s/%010u", folder, blkfilename)
+#define set_blk_dir(folder, name) sprintf(dir_buf, "%s/%010u", folder, name)
 
 int append_chain(const char *folder, const BLOCK *blk) {
     int success = 0;

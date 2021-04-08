@@ -8,13 +8,16 @@
 //进行转账交易
 TRANSV* transact(const uint8_t* from_addr, const uint8_t* to_addr, const uint64_t amount, const uint8_t *p_privateKey) {
 	TRANSV* t = malloc(sizeof(TRANSV));
-	memcpy(t->t.t.from_addr, from_addr, 256/8+1);
-	memcpy(t->t.t.to_addr, to_addr, 256/8);
+	memcpy(t->td.t.from_addr, from_addr, 256/8+1);
+	memcpy(t->td.t.to_addr, to_addr, 256/8);
+	t->td.t.amount = amount;
 	uint8_t *digest = malloc(256/8);
-	sha256(t->t.data, sizeof(TRANSDAT), digest);
+	sha256(t->td.data, sizeof(TRANSDAT), digest);
 	ecdsa_sign(p_privateKey, digest, t->ecc);
-	t->t.t.amount = amount;
 	free(digest);
+	#ifdef SELF_TEST_COIN
+		puts("Transaction completed.");
+	#endif
 	return t;
 }
 
@@ -28,9 +31,22 @@ COINDAT* create_data() {
 //向data添加一个转账交易数据块 成功返回当前交易数 错误返回EOF
 int add_trans(COINDAT* cd, const TRANSV* tv) {
 	if(cd->trans_cnt < MAXTRANCNT) {
-		memcpy(&(cd->t[cd->trans_cnt]), tv, sizeof(TRANSV));
+		memcpy(&(cd->tv[cd->trans_cnt]), tv, sizeof(TRANSV));
 		return cd->trans_cnt++;
 	} else return EOF;
+}
+
+int check_ecc(COINDAT* data) {
+	int pass = 1;		//验证通过标志
+	uint8_t *digest = malloc(256/8);
+	for(int i = 0; i < data->trans_cnt; i++) {
+		sha256(data->tv[i].td.data, sizeof(TRANSDAT), digest);
+		if(!ecdsa_verify(data->tv[i].td.t.from_addr, digest, data->tv[i].ecc)) {
+			pass = 0;
+			break;
+		}
+	}
+	return pass;
 }
 
 #ifdef SELF_TEST_COIN
@@ -54,6 +70,18 @@ COINDAT* new_mined_data() {
 	free(tv);
 	return data;
 }
+void add_trans_chain() {
+	if(check_ecc(data)) {
+		puts("ECC verify passed.");
+		BLOCK* blk = wrap_block(0, 8, pub_key, prev_hash, priv_key, data, DATSZ);
+		sha256(blk, BLKSZ, prev_hash);
+		append_chain("block", blk);
+		free(blk);
+		free(data);
+	} else puts("ECC verify failed.");
+	data = new_mined_data();
+	puts("Add new block.");
+}
 void miner_trans_to(const char* name, const uint64_t amount) {
 	TRANSV* tv = NULL;
 	uint8_t priv_key_acc[ECC_BYTES];	//私钥
@@ -65,14 +93,10 @@ void miner_trans_to(const char* name, const uint64_t amount) {
     printf("Generated %s's priv key: ", name);
     printhash(priv_key_acc, ECC_BYTES);
     putchar('\n');
-	transact(pub_key, pub_key_acc, amount, priv_key);	//转amount个coin
+	tv = transact(pub_key, pub_key_acc, amount, priv_key);	//转amount个coin
 	if(!~add_trans(data, tv)) {		//如果data已满
-		BLOCK* blk = wrap_block(0, 8, pub_key, prev_hash, priv_key, data, DATSZ);
-		sha256(blk, BLKSZ, prev_hash);
-		append_chain("block", blk);
-		free(blk);
-		free(data);
-		data = new_mined_data();
+		add_trans_chain();
+		add_trans(data, tv);
 	}
 	putchar('\n');
 }
@@ -104,5 +128,6 @@ int main() {
 	miner_trans_to("minazuki", 137);
 	miner_trans_to("node", 46);
 	miner_trans_to("ono", 83);
+	add_trans_chain();
 }
 #endif
