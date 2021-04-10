@@ -162,23 +162,23 @@ int main() {
         printhash(miner_priv_key, ECC_BYTES);
         putchar('\n');
         make_new_chain("block", miner_priv_key, 8);
+		data = new_mined_data(miner_pub_key, miner_priv_key);	//新建一个记录块
+		miner_trans_to("aska", 16);
+		miner_trans_to("boy", 1);
+		miner_trans_to("chika", 3);
+		miner_trans_to("doll", 7);
+		miner_trans_to("emily", 4);
+		miner_trans_to("fault", 23);
+		miner_trans_to("greet", 99);
+		miner_trans_to("haru", 233);
+		miner_trans_to("izumi", 11);
+		miner_trans_to("juice", 6);
+		miner_trans_to("kato", 39);
+		miner_trans_to("lumia", 2);
+		miner_trans_to("minazuki", 137);
+		miner_trans_to("node", 46);
+		miner_trans_to("ono", 83);
+		add_trans_chain(&data, miner_pub_key, miner_priv_key, prev_hash);
     }
-	data = new_mined_data(miner_pub_key, miner_priv_key);	//新建一个记录块
-	miner_trans_to("aska", 16);
-	miner_trans_to("boy", 1);
-	miner_trans_to("chika", 3);
-	miner_trans_to("doll", 7);
-	miner_trans_to("emily", 4);
-	miner_trans_to("fault", 23);
-	miner_trans_to("greet", 99);
-	miner_trans_to("haru", 233);
-	miner_trans_to("izumi", 11);
-	miner_trans_to("juice", 6);
-	miner_trans_to("kato", 39);
-	miner_trans_to("lumia", 2);
-	miner_trans_to("minazuki", 137);
-	miner_trans_to("node", 46);
-	miner_trans_to("ono", 83);
-	add_trans_chain(&data, miner_pub_key, miner_priv_key, prev_hash);
 }
 #endif
