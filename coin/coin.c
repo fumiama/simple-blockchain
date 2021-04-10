@@ -8,7 +8,9 @@
 //#define SELF_TEST_COIN
 
 uint8_t zero_pub[ECC_BYTES+1];	//全0地址
+#ifdef SELF_TEST_COIN
 #define printhash(x, bytes) for(int i = 0; i < (bytes); i++) printf("%02x", (x)[i])
+#endif
 
 //进行转账交易
 TRANSV* transact(const uint8_t* from_addr, const uint8_t* to_addr, const uint64_t amount, const uint8_t *p_privateKey) {
@@ -42,6 +44,7 @@ TRANSV* transact(const uint8_t* from_addr, const uint8_t* to_addr, const uint64_
 	return t;
 }
 
+//生成一笔挖矿收益转账
 TRANSV* mine(const uint8_t* miner_pub_key, const uint8_t* miner_priv_key) {
 	return transact(zero_pub, miner_pub_key, MINEAMT, miner_priv_key);		//挖矿奖励
 }
@@ -81,6 +84,7 @@ int add_trans(COINDAT* cd, const TRANSV* tv) {
 	} else return EOF;
 }
 
+//data块签名校验+挖矿收益验证
 int check_ecc(const COINDAT* data) {
 	int pass = 1;		//验证通过标志
 	uint8_t* digest = malloc(256/8);
@@ -111,6 +115,7 @@ int check_ecc(const COINDAT* data) {
 	return pass;
 }
 
+//将转账data块加入区块链
 void add_trans_chain(COINDAT** data, const uint8_t* miner_pub_key, const uint8_t* miner_priv_key, uint8_t* prev_hash) {
 	if(check_ecc(*data)) {
 		puts("ECC verify passed.");
