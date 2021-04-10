@@ -1,3 +1,6 @@
+#ifndef _POOL_H
+#define _POOL_H
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -12,3 +15,5 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <time.h>
+
+#endif

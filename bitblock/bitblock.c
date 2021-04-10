@@ -38,19 +38,17 @@ static int scan_n2(BLOCK *blk, uint16_t zerobit_cnt) {
     return flag;
 }
 
-static int scan_nounce(BLOCK *blk, uint16_t zerobit_cnt) {
+static void scan_nounce(BLOCK *blk, uint16_t zerobit_cnt) {
     uint64_t i = 0;
     uint8_t *digest = malloc(256/8);
-    int flag = 1;
-    while(flag) {
+    while(1) {
         blk->n1 = i;
-        if(scan_n2(blk, zerobit_cnt)) break;
+        if(scan_n2(blk, zerobit_cnt) || i++ == UINT64_MAX) break;
     }
     free(digest);
-    return flag;
 }
 
-BLOCK* wrap_block(const uint64_t version, const uint16_t zerobit_cnt, const uint8_t* log_addr, const uint8_t* prev_hash, const uint8_t* p_privateKey, const char* data, uint32_t data_len) {
+BLOCK* wrap_block_no_nounce(const uint64_t version, const uint8_t* log_addr, const uint8_t* prev_hash, const uint8_t* p_privateKey, const char* data, uint32_t data_len) {
     BLOCK* blk = (BLOCK*)malloc(BLKSZ);
     if(data_len > DATSZ) data_len = DATSZ;
     memset(blk->data, 0, DATSZ);
@@ -59,6 +57,11 @@ BLOCK* wrap_block(const uint64_t version, const uint16_t zerobit_cnt, const uint
     blk->version = version;
     memcpy(blk->log_addr, log_addr, 256/8+1);
     memcpy(blk->prev_hash, prev_hash, 256/8);
+    return blk;
+}
+
+BLOCK* wrap_block(const uint64_t version, const uint16_t zerobit_cnt, const uint8_t* log_addr, const uint8_t* prev_hash, const uint8_t* p_privateKey, const char* data, uint32_t data_len) {
+    BLOCK* blk = wrap_block_no_nounce(version, log_addr, prev_hash, p_privateKey, data, data_len);
     scan_nounce(blk, zerobit_cnt);
     return blk;
 }

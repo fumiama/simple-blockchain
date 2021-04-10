@@ -1,3 +1,6 @@
+#ifndef _COIN_H
+#define _COIN_H
+
 #include <stdint.h>
 #include "../bitblock/bitblock.h"
 
@@ -39,3 +42,5 @@ int add_trans(COINDAT* cd, const TRANSV* tv);
 int check_ecc(const COINDAT* data);
 //将转账data块加入区块链
 void add_trans_chain(COINDAT** data, const uint8_t* miner_pub_key, const uint8_t* miner_priv_key, uint8_t* prev_hash);
+
+#endif
