@@ -65,7 +65,7 @@ void take_a_task(const uint16_t zerobit_cnt) {
 	}
 }
 
-int bindServer(uint16_t port, u_int try_times) {
+int bindServer(uint16_t port, unsigned int try_times) {
 	int fail_count = 0;
 	int result = -1;
 	server_addr.sin_family = AF_INET;
@@ -84,7 +84,7 @@ int bindServer(uint16_t port, u_int try_times) {
 	}
 }
 
-int listenSocket(int fd, u_int try_times) {
+int listenSocket(int fd, unsigned int try_times) {
 	int fail_count = 0;
 	int result = -1;
 	while(!~(result = listen(fd, 10)) && fail_count++ < try_times) sleep(1);
@@ -176,7 +176,41 @@ void acceptClient(int fd) {
 	}
 }
 
+void handleTasks(const void *p_zerobit_cnt) {
+	while(1) {
+		take_a_task(*((uint16_t*)p_zerobit_cnt));
+		sleep(1);
+	}
+}
 
-void handleTasks() {
-	
+#define showUsage(program) printf("Usage: %s [-d] port try_listen_times zerobit_cnt\n\t-d: As daemon\n", program)
+
+int main(int argc, char *argv[]) {
+    if(argc != 4 && argc != 5) showUsage(argv[0]);
+    else {
+        int port = 0;
+        int as_daemon = !strcmp("-d", argv[1]);
+        sscanf(argv[as_daemon?2:1], "%d", &port);
+        if(port > 0 && port < 65536) {
+            int times = 0;
+            sscanf(argv[as_daemon?3:2], "%d", &times);
+            if(times > 0) {
+                if(!as_daemon || (as_daemon && (daemon(1, 1) >= 0))) {
+                    signal(SIGQUIT, handle_pipe);
+                    signal(SIGPIPE, handle_pipe);
+					int fd;
+                    if((fd = bindServer(port, times))) if(listenSocket(fd, times)) {
+						pthread_t take_thread;
+						uint16_t zbc = 0;
+            			sscanf(argv[as_daemon?4:3], "%hu", &zbc);
+						if(zbc > 0 && zbc < 256) {
+							if (pthread_create(&take_thread, NULL, (void *)&handleTasks, &zbc)) puts("Error creating task-handling thread");
+							acceptClient(fd);
+						} else puts("Zerobit count error");
+					}
+                } else puts("Start daemon error");
+            } else printf("Error times: %d\n", times);
+        } else printf("Error port: %d\n", port);
+    }
+    exit(EXIT_FAILURE);
 }
