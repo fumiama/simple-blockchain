@@ -16,7 +16,7 @@ void add_task(const BLOCK* blk) {
 int get_idle_cli() {
 	int i = 0;
 	while(i < CLISZ) {
-		if(clis[i].cmd == CMD_CLI_START || clis[i].cmd == CMD_CLI_FINTSK) break;
+		if(clis[i].cmd == CMD_CLI_WAIT || clis[i].cmd == CMD_CLI_FINTSK) break;
 		i++;
 	}
 	return (i < CLISZ)?i:EOF;
@@ -26,11 +26,12 @@ int get_idle_cli() {
 int deliver_scan_n2_task(uint64_t n1, BLOCK* blk, const uint16_t zerobit_cnt) {
 	int cli;
 	while((cli = get_idle_cli()) < 0) sleep(1);
-	if(clis[cli].cmd == CMD_CLI_WAIT) {
+	if(clis[cli].cmd == CMD_CLI_WAIT || clis[cli].cmd == CMD_CLI_FINTSK) {
 		clis[cli].n1 = n1;
 		clis[cli].blk = blk;
 		clis[cli].zerobit_cnt = zerobit_cnt;
 		clis[cli].cmd = CMD_CLI_START;
+		send(clis[cli].accept_fd, clis+cli, sizeof(CLISTAT), 0);	//将数据推至矿机
 	}
 	return clis[cli].cmd;
 }
@@ -45,6 +46,8 @@ void scan_finished_n2(const char* folder) {
 			for(int j = 0; j < CLISZ; j++) {
 				if(clis[j].blk == clis[i].blk) {
 					clis[j].cmd = CMD_CLI_FINTSK;
+					//通知所有客户端终止运算
+					send(clis[j].accept_fd, clis+j, CLISZ, 0);
 				}
 			}
 		}
@@ -60,8 +63,15 @@ void take_a_task(const uint16_t zerobit_cnt) {
 		prev_bc = bc;
 		bc = bc->next;
 	}
-	for(int i = 0; i < CLISZ; i++) {
-		if(deliver_scan_n2_task(i, bc->blk, zerobit_cnt) == CMD_CLI_FINTSK) break;
+	int i;
+	for(i = 0; i < CLISZ; i++) {
+		deliver_scan_n2_task(i, bc->blk, zerobit_cnt);
+	}
+	i = 0;
+	while(1) {	//等待任务完成
+		if(i >= CLISZ) i = 0;
+		if(clis[i++].cmd == CMD_CLI_FINTSK) break;
+		sleep(1);
 	}
 }
 
@@ -78,7 +88,7 @@ int bindServer(uint16_t port, unsigned int try_times) {
 	if(!~result && fail_count >= try_times) {
 		puts("Bind server failure!");
 		return 0;
-	} else{
+	} else {
 		puts("Bind server success!");
 		return fd;
 	}
@@ -98,11 +108,15 @@ int listenSocket(int fd, unsigned int try_times) {
 }
 
 int checkBuffer(CLISTAT *cst) {
-    if(cst->data[0] == 'n') {	//说明计算出结果
-		sscanf(cst->data+1, "%lu", cst->n2);
+    if(cst->data[0] == 'f') {	//说明计算出结果
+		sscanf(cst->data+1, "%lu", &(cst->n2));
 		cst->cmd = CMD_CLI_FINTSK;
-	} else if(cst->data[0] == 'g') {	//说明客户端请求计算
+	} else if(cst->data[0] == 'w') {	//客户端可以开始计算
 		cst->cmd = CMD_CLI_WAIT;
+	} else if(cst->data[0] == 'a') {	//添加block请求
+		add_task((BLOCK*)(cst->data+1));
+	} else if(cst->data[0] == 'e') {	//终止连接请求
+		cst->cmd = CMD_CLI_ENDCON;
 	}
 }
 
@@ -142,8 +156,8 @@ void handleAccept(void *p) {
         pthread_t thread;
         if (pthread_create(&thread, NULL, (void *)&acceptTimer, p)) puts("Error creating timer thread");
         else puts("Creating timer thread succeeded");
-        sendData(accept_fd, "Welcome to simple blockchain server.", 37);
-        char *buff = calloc(BUFSIZ, sizeof(char));
+        sendData(accept_fd, "Welcome to simple blockchain pool server.", 42);
+        char *buff = calloc(BLKSZ+BUFSIZ, sizeof(char));
         if(buff) {
             cli_p(p)->data = buff;
             while(cli_p(p)->thread && (cli_p(p)->numbytes = recv(accept_fd, buff, BUFSIZ, 0)) > 0) {
@@ -167,6 +181,7 @@ void acceptClient(int fd) {
 			printf("Run on thread No.%d\n", p);
 			struct sockaddr_in client_addr;
 			clis[p].accept_fd = accept(fd, (struct sockaddr *)&client_addr, &struct_len);
+			clis[p].cmd = CMD_CLI_WAIT;
 			if (pthread_create(&(clis[p].thread), NULL, (void *)&handleAccept, &clis[p])) puts("Error creating thread");
 			else puts("Creating thread succeeded");
 		} else {
@@ -177,6 +192,8 @@ void acceptClient(int fd) {
 }
 
 void handleTasks(const void *p_zerobit_cnt) {
+	signal(SIGQUIT, handle_pipe);
+    signal(SIGPIPE, handle_pipe);
 	while(1) {
 		take_a_task(*((uint16_t*)p_zerobit_cnt));
 		sleep(1);
