@@ -16,6 +16,9 @@
 #include <pthread.h>
 #include <time.h>
 
+#include "../bitblock/bitblock.h"
+#include "../chain/chain.h"
+
 #define CLISZ 64
 
 #define CMD_CLI_WAIT	0	//等待任务
@@ -29,11 +32,12 @@ struct CLISTAT {
 	uint64_t n1, n2;
 	uint16_t zerobit_cnt;
 	int cmd;
-	BLOCK* blk;
 	char* data;
 	ssize_t numbytes;
+	BLOCK blk;
 };
 typedef struct CLISTAT CLISTAT;
+#define CLISTATSZ (BLKSZ+2*sizeof(int)+sizeof(pthread_t)+2*sizeof(uint64_t)+sizeof(uint16_t)+sizeof(char*)+sizeof(ssize_t))
 
 socklen_t struct_len = sizeof(struct sockaddr_in);
 struct sockaddr_in server_addr;

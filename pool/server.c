@@ -147,6 +147,17 @@ void handle_pipe(int signo) {
     puts("Pipe error");
 }
 
+int sendData(int accept_fd, char *data, size_t length) {
+    if(!~send(accept_fd, data, length, 0)) {
+        puts("Send data error");
+        return 0;
+    } else {
+        printf("Send data: ");
+        puts(data);
+        return 1;
+    }
+}
+
 void handleAccept(void *p) {
     int accept_fd = cli_p(p)->accept_fd;
     if(accept_fd > 0) {

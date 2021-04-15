@@ -2,8 +2,6 @@
 #define _POOL_SERVER_H
 
 #include "pool.h"
-#include "../bitblock/bitblock.h"
-#include "../chain/chain.h"
 
 struct BLKCHN {
 	BLOCK* blk;

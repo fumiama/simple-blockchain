@@ -2,6 +2,5 @@
 #define _POOL_CLIENT_H
 
 #include "pool.h"
-#include "../bitblock/bitblock.h"
 
 #endif

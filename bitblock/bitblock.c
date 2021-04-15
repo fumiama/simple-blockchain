@@ -24,7 +24,7 @@ static uint16_t zerobitsof(uint8_t *hash) {     //hash前多少比特为0
     return i*8 + x;
 }
 
-static int scan_n2(BLOCK *blk, uint16_t zerobit_cnt) {
+int scan_n2(BLOCK *blk, uint16_t zerobit_cnt) {
     uint64_t i = 0;
     uint8_t *digest = malloc(256/8);
     int flag = 1;
