@@ -7,7 +7,6 @@
 
 //#define SELF_TEST_COIN
 
-uint8_t zero_pub[ECC_BYTES+1];	//全0地址
 #ifdef SELF_TEST_COIN
 #define printhash(x, bytes) for(int i = 0; i < (bytes); i++) printf("%02x", (x)[i])
 #endif
@@ -46,7 +45,7 @@ TRANSV* transact(const uint8_t* from_addr, const uint8_t* to_addr, const uint64_
 
 //生成一笔挖矿收益转账
 TRANSV* mine(const uint8_t* miner_pub_key, const uint8_t* miner_priv_key) {
-	return transact(zero_pub, miner_pub_key, MINEAMT, miner_priv_key);		//挖矿奖励
+	return transact(public_key_all_zero, miner_pub_key, MINEAMT, miner_priv_key);		//挖矿奖励
 }
 
 //创建一个转账data块，可存放多条转账
